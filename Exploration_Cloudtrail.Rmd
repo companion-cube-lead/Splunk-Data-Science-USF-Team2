@@ -1,0 +1,90 @@
+---
+title: "Exploration Splunk Bots"
+author: "Anders Vargas"
+date: "10/1/2020"
+output: html_document
+---
+
+```{r}
+library(data.table)
+library(lubridate)
+library(ggplot)
+
+cloudtrail <- fread("dataset.csv")
+```
+
+
+```{r}
+cloudtrail[, .N, by = errorCode]
+```
+
+```{r}
+cloudtrail[errorCode == 'Client.InstanceLimitExceeded']
+```
+
+```{r}
+cloudtrail[errorCode == 'Client.UnauthorizedOperation']
+```
+
+
+What is the acceptable amount of request a "non malicious" machine makes?
+
+
+```{r}
+#look at distribution for each of the error codes
+
+cloudtrail[, list(eventTime, eventType, errorCode, sourceIPAddress)]
+
+# how many request per time period? (choose period)
+
+cloudtrail[, eventTime_lubri := ymd_hms(eventTime)]
+
+# We seperate the moment when the login began from the unique ip address out in n_min window 
+# For each window we're going to how many logins occured
+
+# 10 min 
+# 30 min
+# 1 hour
+# 2 hour ~
+
+
+# If this an attack, the time (the lag) betweeen malicious attempts to login would probabaly be much shorter than if a human were doing it, (assuming, the attack is automated through a brute force approach)
+
+cloudtrail[, .N, by = list(eventTime,sourceIPAddress)]
+
+
+```
+
+
+```{r}
+counts_async_by_eventime <- cloudtrail[, .N, by = list(eventTime_lubri,sourceIPAddress, eventType, errorCode)]
+
+ggplot(counts_async_by_eventime, aes(x = N) ) +
+  geom_density(color = "darkblue", fill = "lightblue") + 
+  ggtitle("Density of Requests by Event Time") + 
+  xlab("Count of Logins")
+
+density_counts_eventime <- ggplot(counts_async_by_eventime, aes(x = N) ) +
+  geom_density(color = "darkblue", fill = "lightblue") + 
+  ggtitle("Density of Requests by Event Time") + 
+  xlab("Count of Logins")
+
+
+```
+
+```{r}
+
+density_counts_eventime + facet_wrap(eventType~.)
+
+```
+
+```{r}
+
+density_counts_eventime + 
+  facet_wrap(errorCode~.) + scale
+  
+
+```
+
+
+
