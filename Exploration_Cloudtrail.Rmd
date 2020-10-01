@@ -10,7 +10,7 @@ output:
 ```{r}
 library(data.table)
 library(lubridate)
-library(ggplot)
+library(ggplot2)
 
 cloudtrail <- fread("dataset.csv")
 ```
@@ -83,7 +83,7 @@ density_counts_eventime + facet_wrap(eventType~.)
 ```{r}
 
 density_counts_eventime + 
-  facet_wrap(errorCode~.) + scale
+  facet_wrap(errorCode~.)
   
 
 ```
